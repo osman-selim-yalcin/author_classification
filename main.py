@@ -17,7 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 
 
-# Load documents assuming all are from 'aydın'
+# Load documents
 def load_documents_from_folder(folder_path):
     documents = []
     for file_name in os.listdir(folder_path):
@@ -45,9 +45,6 @@ df["word_count"] = df["text"].apply(lambda x: len(x.split()))
 author_word_counts = (
     df.groupby("author")["word_count"].sum().sort_values(ascending=False)
 )
-print("Her yazarın toplam kelime sayısı:")
-print(df)
-
 
 X_train, X_test, y_train, y_test = train_test_split(
     df["text"], df["label"], test_size=0.2, random_state=42
@@ -141,14 +138,14 @@ bert_compatible_models = {
 }
 
 # TMP
-results = []
+results_bert = []
 
 for model_name, model in bert_compatible_models.items():
     print(f"Evaluating {model_name} with BERT embeddings...")
     model.fit(X_train_bert, y_train)
     y_pred = model.predict(X_test_bert)
     report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
-    results.append(
+    results_bert.append(
         {
             "Feature": "BERT",
             "Model": model_name,
@@ -160,7 +157,7 @@ for model_name, model in bert_compatible_models.items():
     )
 
 print("BERT Results:")
-for result in results:
+for result in results_bert:
     if result["Feature"] == "BERT":
         print(
             f"Feature: {result['Feature']}, Model: {result['Model']}, "
@@ -169,5 +166,13 @@ for result in results:
         )
 # Save results to CSV
 results_df = pd.DataFrame(results)
-results_df.to_csv("results2.csv", index=False)
+results_df.to_csv("results.csv", index=False)
 print("Results saved to results.csv")
+results_bert_df = pd.DataFrame(results_bert)
+results_bert_df.to_csv("results_bert.csv", index=False)
+print("Results saved to results_bert.csv")
+
+# %%
+result_all = pd.concat([results_df, results_bert_df], ignore_index=True)
+result_all.to_csv("results_all.csv", index=False)
+print("All results saved to results_all.csv")
